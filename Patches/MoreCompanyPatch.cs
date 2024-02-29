@@ -26,6 +26,9 @@ namespace MaskedEnemyRework.Patches
             {
                 cosmeticApplication.ClearCosmetics();
                 GameObject.Destroy(cosmeticApplication);
+                masked.skinnedMeshRenderers = masked.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+                masked.meshRenderers = masked.gameObject.GetComponentsInChildren<MeshRenderer>();
+
             }
 
 
@@ -41,6 +44,5 @@ namespace MaskedEnemyRework.Patches
                 cosmetic.transform.localScale *= CosmeticRegistry.COSMETIC_PLAYER_SCALE_MULT;
             }
         }
-
     }
 }
