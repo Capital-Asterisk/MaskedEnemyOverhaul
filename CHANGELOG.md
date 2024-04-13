@@ -1,4 +1,17 @@
 # Changelog
+
+## v3.2.0 (Coppertiel Fork)
+- v50 compatibility
+- Maybe fixed null meshrenderer bug, related to MoreCompany
+
+## v3.1.990 (Coppertiel Fork)
+- Fixed AdvancedCompany cosmetic compatibility (added 3.1.2 changes to fork)
+- Added "Dont Touch MaskedPlayerEnemy.mimickingPlayer" config for better compatibility with qwbarch-Mirage.
+- Bumped version number so the dll overrides the original
+
+## v0.1.0 (Coppertiel Fork)
+- Fixed runaway power levels
+
 ## v3.1.0
 - Actually fixed Advanced Company
 

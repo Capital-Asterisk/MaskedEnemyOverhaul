@@ -1,12 +1,13 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
+using System;
 using UnityEngine;
 
 namespace MaskedEnemyRework.Patches
@@ -25,6 +26,9 @@ namespace MaskedEnemyRework.Patches
             ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
             logger.LogInfo("Starting Round Manager");
 
+            // PowerLevel is int on v49, but float on v50
+            FieldInfo powerLevelField = typeof(EnemyType).GetField("PowerLevel");
+
             Predicate<SpawnableEnemyWithRarity> isMasked    = enemy => enemy.enemyType.enemyName == "Masked";
             Predicate<SpawnableEnemyWithRarity> isFlowerman = enemy => enemy.enemyType.enemyName == "Flowerman";
 
@@ -33,10 +37,10 @@ namespace MaskedEnemyRework.Patches
                 SpawnableEnemyWithRarity maskedEnemy = Plugin.maskedPrefab;
                 SpawnableEnemyWithRarity flowerman   = ___currentLevel.Enemies.Find(isFlowerman) ?? Plugin.flowerPrefab;
 
-                int powerDelta = 0;
+                float powerDelta = 0.0f;
                 foreach (SpawnableEnemyWithRarity enemy in ___currentLevel.Enemies.FindAll(isMasked))
                 {
-                    powerDelta -= enemy.enemyType.MaxCount * enemy.enemyType.PowerLevel;
+                    powerDelta -= enemy.enemyType.MaxCount * (float) powerLevelField.GetValue(enemy.enemyType);
                 }
                 ___currentLevel.Enemies.RemoveAll(isMasked);
                 ___currentLevel.Enemies.Add(maskedEnemy);
@@ -50,7 +54,11 @@ namespace MaskedEnemyRework.Patches
                 }
 
                 // might spawn too frequently, we will see.
-                maskedEnemy.enemyType.PowerLevel       = 1;
+                const float maskedPowerLevel = 1.0f;
+
+                // C++ dev tries to figure out C#
+                powerLevelField.SetValue(maskedEnemy.enemyType, Convert.ChangeType(maskedPowerLevel, powerLevelField.FieldType));
+
                 maskedEnemy.enemyType.probabilityCurve = flowerman.enemyType.probabilityCurve;
                 maskedEnemy.enemyType.isOutsideEnemy   = Plugin.CanSpawnOutside;
 
@@ -91,16 +99,16 @@ namespace MaskedEnemyRework.Patches
                     maskedEnemy.rarity = Plugin.UseSpawnRarity ? Plugin.SpawnRarity : flowerman.rarity;
                 }
 
-                powerDelta += maskedEnemy.enemyType.MaxCount * maskedEnemy.enemyType.PowerLevel;
+                powerDelta += maskedEnemy.enemyType.MaxCount * maskedPowerLevel;
 
                 logger.LogInfo(String.Format("Adjusting power levels: [maxEnemyPowerCount: {0}+{1}, maxDaytimeEnemyPowerCount: {2}+{3}, maxOutsideEnemyPowerCount: {4}+{5}]",
                                              ___currentLevel.maxEnemyPowerCount,        powerDelta,
                                              ___currentLevel.maxDaytimeEnemyPowerCount, powerDelta,
                                              ___currentLevel.maxOutsideEnemyPowerCount, powerDelta));
 
-                ___currentLevel.maxEnemyPowerCount        += powerDelta;
-                ___currentLevel.maxDaytimeEnemyPowerCount += powerDelta;
-                ___currentLevel.maxOutsideEnemyPowerCount += powerDelta;
+                ___currentLevel.maxEnemyPowerCount        += (int)powerDelta;
+                ___currentLevel.maxDaytimeEnemyPowerCount += (int)powerDelta;
+                ___currentLevel.maxOutsideEnemyPowerCount += (int)powerDelta;
             }
             catch (Exception ex)
             {

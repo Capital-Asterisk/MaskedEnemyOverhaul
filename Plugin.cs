@@ -135,9 +135,6 @@ namespace MaskedEnemyRework
             harmony.PatchAll(typeof(GetMaskedPrefabForLaterUse));
             harmony.PatchAll(typeof(MaskedVisualRework));
             harmony.PatchAll(typeof(MaskedSpawnSettings));
-
         }
-
-       
     }
 }
