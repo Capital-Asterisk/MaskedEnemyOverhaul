@@ -16,7 +16,7 @@ namespace MaskedEnemyRework
     {
         private readonly Harmony harmony = new(PluginInfo.PLUGIN_GUID);
         private static Plugin Instance;
-        internal ManualLogSource logger;
+        public static ManualLogSource logger;
 
         public static List<int> PlayerMimicList;
         public static int PlayerMimicIndex;
@@ -135,6 +135,9 @@ namespace MaskedEnemyRework
             harmony.PatchAll(typeof(GetMaskedPrefabForLaterUse));
             harmony.PatchAll(typeof(MaskedVisualRework));
             harmony.PatchAll(typeof(MaskedSpawnSettings));
+
+
+            harmony.PatchAll(typeof(LandmineVsMasked));
         }
     }
 }
