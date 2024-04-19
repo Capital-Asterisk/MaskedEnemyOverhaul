@@ -15,6 +15,18 @@ namespace MaskedEnemyRework.Patches
     [HarmonyPatch(typeof(RoundManager))]
     internal class MaskedSpawnSettings
     {
+        private static Predicate<SpawnableEnemyWithRarity> isMasked    = enemy => enemy.enemyType.enemyName == "Masked";
+
+        // int on v49, but float on v50
+        private static FieldInfo powerLevelField = typeof(EnemyType).GetField("PowerLevel");
+        private static FieldInfo currentMaxInsidePowerField = typeof(RoundManager).GetField("currentMaxInsidePower");
+
+        public static T StupidGet<T>(object obj, FieldInfo field)
+        {
+            return (T) Convert.ChangeType(field.GetValue(obj), typeof(T));
+        }
+
+        public static bool isZombieApocalypse = false;
 
         [HarmonyPatch("BeginEnemySpawning")]
         [HarmonyPrefix]
@@ -23,11 +35,8 @@ namespace MaskedEnemyRework.Patches
             if (Plugin.UseVanillaSpawns)
                 return;
 
-            ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
+            ManualLogSource logger = Plugin.logger;
             logger.LogInfo("Starting Round Manager");
-
-            // PowerLevel is int on v49, but float on v50
-            FieldInfo powerLevelField = typeof(EnemyType).GetField("PowerLevel");
 
             Predicate<SpawnableEnemyWithRarity> isMasked    = enemy => enemy.enemyType.enemyName == "Masked";
             Predicate<SpawnableEnemyWithRarity> isFlowerman = enemy => enemy.enemyType.enemyName == "Flowerman";
@@ -40,7 +49,7 @@ namespace MaskedEnemyRework.Patches
                 float powerDelta = 0.0f;
                 foreach (SpawnableEnemyWithRarity enemy in ___currentLevel.Enemies.FindAll(isMasked))
                 {
-                    powerDelta -= enemy.enemyType.MaxCount * (float) powerLevelField.GetValue(enemy.enemyType);
+                    powerDelta -= enemy.enemyType.MaxCount * StupidGet<float>(enemy.enemyType, powerLevelField);
                 }
                 ___currentLevel.Enemies.RemoveAll(isMasked);
                 ___currentLevel.Enemies.Add(maskedEnemy);
@@ -62,18 +71,19 @@ namespace MaskedEnemyRework.Patches
                 maskedEnemy.enemyType.probabilityCurve = flowerman.enemyType.probabilityCurve;
                 maskedEnemy.enemyType.isOutsideEnemy   = Plugin.CanSpawnOutside;
 
-                bool zombieApocalypse = Plugin.ZombieApocalypseMode;
-                zombieApocalypse |= (StartOfRound.Instance.randomMapSeed % 100) < Plugin.RandomChanceZombieApocalypse;
+                isZombieApocalypse = Plugin.ZombieApocalypseMode
+                                   || ( (StartOfRound.Instance.randomMapSeed % 100) < Plugin.RandomChanceZombieApocalypse );
 
-                if (zombieApocalypse)
+                if (isZombieApocalypse)
                 {
                     logger.LogInfo("ZOMBIE APOCALYPSE");
 
                     maskedEnemy.enemyType.MaxCount = Plugin.MaxZombies;
                     maskedEnemy.rarity = 1000000;
 
-                    Plugin.RandomChanceZombieApocalypse = -1;
+                    //Plugin.RandomChanceZombieApocalypse = -1;
 
+                    /*
                     ___currentLevel.enemySpawnChanceThroughoutDay = new AnimationCurve((Keyframe[])(object)new Keyframe[2]
                     {
                         new Keyframe(0f,   Plugin.InsideEnemySpawnCurve),
@@ -90,6 +100,7 @@ namespace MaskedEnemyRework.Patches
                         new Keyframe(20f, Plugin.MidOutsideEnemySpawnCurve),
                         new Keyframe(21f, Plugin.EndOutsideEnemySpawnCurve)
                     });
+                    */
                 }
                 else
                 {
@@ -114,6 +125,90 @@ namespace MaskedEnemyRework.Patches
             {
                logger.LogInfo(ex);
             }
+        }
+
+        [HarmonyPatch("AssignRandomEnemyToVent")]
+        [HarmonyPrefix]
+        static bool ZombieVent(
+                EnemyVent           vent,
+                float               spawnTime,
+                ref RoundManager    __instance,
+                ref bool            __result,
+                ref SelectableLevel ___currentLevel,
+                ref TimeOfDay       ___timeScript,
+                ref bool            ___cannotSpawnMoreInsideEnemies,
+                ref bool            ___firstTimeSpawningEnemies,
+                ref int             ___currentEnemyPower,
+                ref int             ___currentHour)
+        {
+            if (!isZombieApocalypse)
+            {
+                return true; // Do vanilla behaviour instead
+            }
+
+            if (___firstTimeSpawningEnemies)
+            {
+                foreach (SpawnableEnemyWithRarity spawnable in ___currentLevel.Enemies)
+                {
+                    spawnable.enemyType.numberSpawned = 0;
+                }
+            }
+            ___firstTimeSpawningEnemies = false;
+
+            ManualLogSource logger = Plugin.logger;
+
+            int maskedIndex = ___currentLevel.Enemies.FindIndex(isMasked);
+
+            SpawnableEnemyWithRarity maskedEnemy = ___currentLevel.Enemies[maskedIndex];
+
+            if (maskedIndex == -1)
+            {
+                logger.LogInfo("No masked found in enemy list?");
+                return true; // Do vanilla behaviour instead
+            }
+
+            if (maskedEnemy.enemyType.numberSpawned >= maskedEnemy.enemyType.MaxCount)
+            {
+                __result = false;
+                ___cannotSpawnMoreInsideEnemies = true;
+                logger.LogInfo("Max masked spawned");
+                return false;
+            }
+
+            float maskedPowerLevel      = StupidGet<float>(maskedEnemy.enemyType, powerLevelField);
+            float currentMaxInsidePower = StupidGet<float>(__instance, currentMaxInsidePowerField);
+            float availableInsidePower  = currentMaxInsidePower - ___currentEnemyPower;
+
+            logger.LogInfo("available inside power: " + availableInsidePower);
+
+            if (maskedPowerLevel > availableInsidePower)
+            {
+                __result = false;
+                ___cannotSpawnMoreInsideEnemies = true;
+                logger.LogInfo("Max power");
+                return false;
+            }
+
+            ___currentEnemyPower += (int) maskedPowerLevel;
+            vent.enemyType = maskedEnemy.enemyType;
+            vent.enemyTypeIndex = maskedIndex;
+            vent.occupied = true;
+            vent.spawnTime = spawnTime;
+            if (___timeScript.hour - ___currentHour > 0)
+            {
+                logger.LogInfo("Round manager catching up to time yada yada UvU.");
+            }
+            else
+            {
+                vent.SyncVentSpawnTimeClientRpc((int)spawnTime, maskedIndex);
+            }
+            maskedEnemy.enemyType.numberSpawned ++;
+
+            logger.LogInfo("Spawned a masked");
+
+            __result = true;
+
+            return false;
         }
     }
 }
