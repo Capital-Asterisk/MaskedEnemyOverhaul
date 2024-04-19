@@ -39,7 +39,7 @@ namespace MaskedEnemyRework.Patches
         [HarmonyPrefix]
         static void LookingAtMasked(ref PlayerControllerB __instance)
         {
-            if (!Plugin.ShowMaskedNames)
+            if (!Plugin.cfg.ShowMaskedNames)
                 return;
 
             Ray ray = new(__instance.gameplayCamera.transform.position, __instance.gameplayCamera.transform.forward);

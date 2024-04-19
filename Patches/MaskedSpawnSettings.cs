@@ -1,12 +1,7 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
-using System.Text;
-using System.Threading.Tasks;
 using System;
 using UnityEngine;
 
@@ -32,7 +27,9 @@ namespace MaskedEnemyRework.Patches
         [HarmonyPrefix]
         static void UpdateSpawnRates(ref SelectableLevel ___currentLevel)
         {
-            if (Plugin.UseVanillaSpawns)
+            PluginConfig cfg = Plugin.cfg;
+
+            if (cfg.UseVanillaSpawns)
                 return;
 
             ManualLogSource logger = Plugin.logger;
@@ -54,7 +51,7 @@ namespace MaskedEnemyRework.Patches
                 ___currentLevel.Enemies.RemoveAll(isMasked);
                 ___currentLevel.Enemies.Add(maskedEnemy);
 
-                if (Plugin.CanSpawnOutside)
+                if (cfg.CanSpawnOutside)
                 {
                     ___currentLevel.OutsideEnemies.RemoveAll(isMasked);
                     ___currentLevel.OutsideEnemies.Add(maskedEnemy);
@@ -69,16 +66,16 @@ namespace MaskedEnemyRework.Patches
                 powerLevelField.SetValue(maskedEnemy.enemyType, Convert.ChangeType(maskedPowerLevel, powerLevelField.FieldType));
 
                 maskedEnemy.enemyType.probabilityCurve = flowerman.enemyType.probabilityCurve;
-                maskedEnemy.enemyType.isOutsideEnemy   = Plugin.CanSpawnOutside;
+                maskedEnemy.enemyType.isOutsideEnemy   = cfg.CanSpawnOutside;
 
-                isZombieApocalypse = Plugin.ZombieApocalypseMode
-                                   || ( (StartOfRound.Instance.randomMapSeed % 100) < Plugin.RandomChanceZombieApocalypse );
+                isZombieApocalypse = cfg.ZombieApocalypseMode
+                                   || ( (StartOfRound.Instance.randomMapSeed % 100) < cfg.ZombieApocalypeRandomChance );
 
                 if (isZombieApocalypse)
                 {
                     logger.LogInfo("ZOMBIE APOCALYPSE");
 
-                    maskedEnemy.enemyType.MaxCount = Plugin.MaxZombies;
+                    maskedEnemy.enemyType.MaxCount = cfg.MaxZombies;
                     maskedEnemy.rarity = 1000000;
 
                     //Plugin.RandomChanceZombieApocalypse = -1;
@@ -106,8 +103,8 @@ namespace MaskedEnemyRework.Patches
                 {
                     logger.LogInfo("no zombies :(");
 
-                    maskedEnemy.enemyType.MaxCount = Plugin.MaxSpawnCount;
-                    maskedEnemy.rarity = Plugin.UseSpawnRarity ? Plugin.SpawnRarity : flowerman.rarity;
+                    maskedEnemy.enemyType.MaxCount = cfg.MaxSpawnCount;
+                    maskedEnemy.rarity = cfg.UseSpawnRarity ? cfg.SpawnRarity : flowerman.rarity;
                 }
 
                 powerDelta += maskedEnemy.enemyType.MaxCount * maskedPowerLevel;

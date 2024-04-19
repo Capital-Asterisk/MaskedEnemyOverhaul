@@ -32,7 +32,7 @@ namespace MaskedEnemyRework.Patches
         {
             ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
 
-            if (!Plugin.DontTouchMimickingPlayer)
+            if (!Plugin.cfg.DontTouchMimickingPlayer)
             {
                 PlayerControllerB[] playerObjects = StartOfRound.Instance.allPlayerScripts; // this spawns max amount of players, not total players (not dynamic)
                 int playerCount = StartOfRound.Instance.ClientPlayerList.Count;
@@ -68,7 +68,7 @@ namespace MaskedEnemyRework.Patches
             }
 
             // remove mask
-            if (Plugin.RemoveMasks || Plugin.RevealMasks)
+            if (Plugin.cfg.RemoveMasks || Plugin.cfg.RevealMasks)
             {
                 __instance.gameObject.transform.Find("ScavengerModel/metarig/spine/spine.001/spine.002/spine.003/spine.004/HeadMaskComedy").gameObject.SetActive(false);
                 __instance.gameObject.transform.Find("ScavengerModel/metarig/spine/spine.001/spine.002/spine.003/spine.004/HeadMaskTragedy").gameObject.SetActive(false);
@@ -88,14 +88,14 @@ namespace MaskedEnemyRework.Patches
         {
 
             GameObject mask = __instance.gameObject.transform.Find("ScavengerModel/metarig/spine/spine.001/spine.002/spine.003/spine.004/HeadMaskComedy").gameObject;
-            if (Plugin.RevealMasks && !mask.activeSelf && __instance.currentBehaviourStateIndex == 1) 
+            if (Plugin.cfg.RevealMasks && !mask.activeSelf && __instance.currentBehaviourStateIndex == 1)
             {
                 ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.PLUGIN_GUID);
                 IEnumerator fadeMaskCoroutine = FadeInAndOut(mask, true, 1f);
                 __instance.StartCoroutine(fadeMaskCoroutine);
             }
             
-            if (Plugin.RemoveZombieArms)
+            if (Plugin.cfg.RemoveZombieArms)
             {
                 setOut = false;
             }
@@ -118,7 +118,7 @@ namespace MaskedEnemyRework.Patches
         [HarmonyPostfix]
         private static void HideRevealedMask(ref MaskedPlayerEnemy __instance)
         {
-            if(Plugin.RevealMasks && __instance.targetPlayer == null)
+            if(Plugin.cfg.RevealMasks && __instance.targetPlayer == null)
             {
                 GameObject mask = __instance.gameObject.transform.Find("ScavengerModel/metarig/spine/spine.001/spine.002/spine.003/spine.004/HeadMaskComedy").gameObject;
 

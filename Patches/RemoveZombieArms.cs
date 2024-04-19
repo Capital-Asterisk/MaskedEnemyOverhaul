@@ -13,7 +13,7 @@ namespace MaskedEnemyRework.Patches
         [HarmonyPrefix]
         private static void RemoveArms(ref bool setOut)
         {
-            if (Plugin.RemoveZombieArms == true)
+            if (Plugin.cfg.RemoveZombieArms == true)
             {
                 setOut = false;
 
