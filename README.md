@@ -1,9 +1,10 @@
-# Masked Enemy Overhaul Fork (v3.2.0)
+# Masked Enemy Overhaul Fork (v3.3.0)
 
 Based on [MaskedEnemyOverhaul](https://thunderstore.io/c/lethal-company/p/HomelessGinger/MaskedEnemyOverhaul/) by HomelessGinger
 
 + Removes the mask the mimic wears, so no one can tell its a fake until it is too late.
 + Boosts the spawn rate to be the same as a bracken, so it can now spawn on every moon
++ Masked can set off Landmines
 + Changes the suit the mimic spawns with to a suit worn by a random player in the game. This works with any modded suit as well
 + Supports cosmetics
 + Most settings are configurable in the config file
