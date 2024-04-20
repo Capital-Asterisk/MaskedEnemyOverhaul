@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.3.0 (Coppertiel Fork)
+- Rework Zombie Apocalypse
+- Refactor config stuff
+- Add Landmine patches to trigger on Masked + option
+- Add Power Level options
+- Add Masked Health option
+
 ## v3.2.0 (Coppertiel Fork)
 - v50 compatibility
 - Maybe fixed null meshrenderer bug, related to MoreCompany

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>MaskedEnemyRework</AssemblyName>
     <Description>Lethal Company Mod</Description>
-    <Version>3.2.0</Version>
+    <Version>3.3.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

@@ -11,9 +11,10 @@ namespace MaskedEnemyRework.Patches
     internal class MaskedSpawnSettings
     {
         private static Predicate<SpawnableEnemyWithRarity> isMasked    = enemy => enemy.enemyType.enemyName == "Masked";
+        private static Predicate<SpawnableEnemyWithRarity> isFlowerman = enemy => enemy.enemyType.enemyName == "Flowerman";
 
         // int on v49, but float on v50
-        private static FieldInfo powerLevelField = typeof(EnemyType).GetField("PowerLevel");
+        private static FieldInfo powerLevelField            = typeof(EnemyType).GetField("PowerLevel");
         private static FieldInfo currentMaxInsidePowerField = typeof(RoundManager).GetField("currentMaxInsidePower");
 
         public static T StupidGet<T>(object obj, FieldInfo field)
@@ -35,13 +36,14 @@ namespace MaskedEnemyRework.Patches
             ManualLogSource logger = Plugin.logger;
             logger.LogInfo("Starting Round Manager");
 
-            Predicate<SpawnableEnemyWithRarity> isMasked    = enemy => enemy.enemyType.enemyName == "Masked";
-            Predicate<SpawnableEnemyWithRarity> isFlowerman = enemy => enemy.enemyType.enemyName == "Flowerman";
+            SpawnableEnemyWithRarity maskedEnemy = Plugin.maskedPrefab;
+            SpawnableEnemyWithRarity flowerman   = ___currentLevel.Enemies.Find(isFlowerman) ?? Plugin.flowerPrefab;
+
+            isZombieApocalypse = cfg.ZombieApocalypseMode || ( (StartOfRound.Instance.randomMapSeed % 100) < cfg.ZombieApocalypeRandomChance );
 
             try
             {
-                SpawnableEnemyWithRarity maskedEnemy = Plugin.maskedPrefab;
-                SpawnableEnemyWithRarity flowerman   = ___currentLevel.Enemies.Find(isFlowerman) ?? Plugin.flowerPrefab;
+                maskedEnemy.enemyType.enemyPrefab.GetComponent<EnemyAI>().enemyHP = cfg.Health;
 
                 float powerDelta = 0.0f;
                 foreach (SpawnableEnemyWithRarity enemy in ___currentLevel.Enemies.FindAll(isMasked))
@@ -59,17 +61,14 @@ namespace MaskedEnemyRework.Patches
                     ___currentLevel.DaytimeEnemies.Add(maskedEnemy);
                 }
 
-                // might spawn too frequently, we will see.
-                const float maskedPowerLevel = 1.0f;
 
-                // C++ dev tries to figure out C#
+                float maskedPowerLevel = isZombieApocalypse ? cfg.ZombiePowerLevel : cfg.PowerLevel;
+
+                 // C++ dev tries to figure out C#
                 powerLevelField.SetValue(maskedEnemy.enemyType, Convert.ChangeType(maskedPowerLevel, powerLevelField.FieldType));
 
                 maskedEnemy.enemyType.probabilityCurve = flowerman.enemyType.probabilityCurve;
                 maskedEnemy.enemyType.isOutsideEnemy   = cfg.CanSpawnOutside;
-
-                isZombieApocalypse = cfg.ZombieApocalypseMode
-                                   || ( (StartOfRound.Instance.randomMapSeed % 100) < cfg.ZombieApocalypeRandomChance );
 
                 if (isZombieApocalypse)
                 {
@@ -80,24 +79,25 @@ namespace MaskedEnemyRework.Patches
 
                     //Plugin.RandomChanceZombieApocalypse = -1;
 
-                    /*
-                    ___currentLevel.enemySpawnChanceThroughoutDay = new AnimationCurve((Keyframe[])(object)new Keyframe[2]
+                    if (cfg.UseZombieSpawnCurve)
                     {
-                        new Keyframe(0f,   Plugin.InsideEnemySpawnCurve),
-                        new Keyframe(0.5f, Plugin.MiddayInsideEnemySpawnCurve)
-                    });
-                    ___currentLevel.daytimeEnemySpawnChanceThroughDay = new AnimationCurve((Keyframe[])(object)new Keyframe[2]
-                    {
-                        new Keyframe(0f,   7f),
-                        new Keyframe(0.5f, 7f)
-                    });
-                    ___currentLevel.outsideEnemySpawnChanceThroughDay = new AnimationCurve((Keyframe[])(object)new Keyframe[3]
-                    {
-                        new Keyframe(0f,  Plugin.StartOutsideEnemySpawnCurve),
-                        new Keyframe(20f, Plugin.MidOutsideEnemySpawnCurve),
-                        new Keyframe(21f, Plugin.EndOutsideEnemySpawnCurve)
-                    });
-                    */
+                        ___currentLevel.enemySpawnChanceThroughoutDay = new AnimationCurve((Keyframe[])(object)new Keyframe[2]
+                        {
+                            new Keyframe(0f,   cfg.InsideEnemySpawnCurve),
+                            new Keyframe(0.5f, cfg.MiddayInsideEnemySpawnCurve)
+                        });
+                        ___currentLevel.daytimeEnemySpawnChanceThroughDay = new AnimationCurve((Keyframe[])(object)new Keyframe[2]
+                        {
+                            new Keyframe(0f,   7f),
+                            new Keyframe(0.5f, 7f)
+                        });
+                        ___currentLevel.outsideEnemySpawnChanceThroughDay = new AnimationCurve((Keyframe[])(object)new Keyframe[3]
+                        {
+                            new Keyframe(0f,  cfg.StartOutsideEnemySpawnCurve),
+                            new Keyframe(20f, cfg.MidOutsideEnemySpawnCurve),
+                            new Keyframe(21f, cfg.EndOutsideEnemySpawnCurve)
+                        });
+                    }
                 }
                 else
                 {
@@ -109,14 +109,17 @@ namespace MaskedEnemyRework.Patches
 
                 powerDelta += maskedEnemy.enemyType.MaxCount * maskedPowerLevel;
 
-                logger.LogInfo(String.Format("Adjusting power levels: [maxEnemyPowerCount: {0}+{1}, maxDaytimeEnemyPowerCount: {2}+{3}, maxOutsideEnemyPowerCount: {4}+{5}]",
-                                             ___currentLevel.maxEnemyPowerCount,        powerDelta,
-                                             ___currentLevel.maxDaytimeEnemyPowerCount, powerDelta,
-                                             ___currentLevel.maxOutsideEnemyPowerCount, powerDelta));
+                if (cfg.BoostMoonPowerLevel)
+                {
+                    logger.LogInfo(String.Format("Adjusting power levels: [maxEnemyPowerCount: {0}+{1}, maxDaytimeEnemyPowerCount: {2}+{3}, maxOutsideEnemyPowerCount: {4}+{5}]",
+                                                ___currentLevel.maxEnemyPowerCount,        powerDelta,
+                                                ___currentLevel.maxDaytimeEnemyPowerCount, powerDelta,
+                                                ___currentLevel.maxOutsideEnemyPowerCount, powerDelta));
 
-                ___currentLevel.maxEnemyPowerCount        += (int)powerDelta;
-                ___currentLevel.maxDaytimeEnemyPowerCount += (int)powerDelta;
-                ___currentLevel.maxOutsideEnemyPowerCount += (int)powerDelta;
+                    ___currentLevel.maxEnemyPowerCount        += (int)powerDelta;
+                    ___currentLevel.maxDaytimeEnemyPowerCount += (int)powerDelta;
+                    ___currentLevel.maxOutsideEnemyPowerCount += (int)powerDelta;
+                }
             }
             catch (Exception ex)
             {
@@ -138,7 +141,7 @@ namespace MaskedEnemyRework.Patches
                 ref int             ___currentEnemyPower,
                 ref int             ___currentHour)
         {
-            if (!isZombieApocalypse)
+            if (Plugin.cfg.UseVanillaSpawns || !isZombieApocalypse)
             {
                 return true; // Do vanilla behaviour instead
             }
