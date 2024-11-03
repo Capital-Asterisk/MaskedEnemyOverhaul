@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>MaskedEnemyRework</AssemblyName>
     <Description>Lethal Company Mod</Description>
-    <Version>3.3.0</Version>
+    <Version>3.4.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -22,22 +22,19 @@
 
   <ItemGroup>
     <Reference Include="LethalLib">
-      <HintPath>ReferencesLCv50\LethalLib.dll</HintPath>
-    </Reference>
-    <Reference Include="MoreCompany">
-      <HintPath>ReferencesLCv50\MoreCompany.dll</HintPath>
+      <HintPath>ReferencesLCv66\LethalLib.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>ReferencesLCv50\Assembly-CSharp.dll</HintPath>
+      <HintPath>ReferencesLCv66\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Netcode.Runtime">
-      <HintPath>ReferencesLCv50\Unity.Netcode.Runtime.dll</HintPath>
+      <HintPath>ReferencesLCv66\Unity.Netcode.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>ReferencesLCv50\UnityEngine.UI.dll</HintPath>
+      <HintPath>ReferencesLCv66\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="System.Security">
-      <HintPath>ReferencesLCv50\System.Security.dll</HintPath>
+      <HintPath>ReferencesLCv66\System.Security.dll</HintPath>
     </Reference>
   </ItemGroup>
 

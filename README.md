@@ -1,4 +1,4 @@
-# Masked Enemy Overhaul Fork (v3.3.0)
+# Masked Enemy Overhaul Fork (v3.4.0)
 
 Based on [MaskedEnemyOverhaul](https://thunderstore.io/c/lethal-company/p/HomelessGinger/MaskedEnemyOverhaul/) by HomelessGinger
 
@@ -12,8 +12,7 @@ Based on [MaskedEnemyOverhaul](https://thunderstore.io/c/lethal-company/p/Homele
 
 ## Important info:
 
-* Tested on Lethal Company v49 and v50
-* (April 13 2024) There's currently a vanilla bug in LC v50 where masked enemies spawned inside cannot harm players outside.
+* Tested on Lethal Company v68, though MIGHT work still work with older versions
 * Nametags on Masked do not work, disabled for now
 * This mod works in both solo and multiplayer lobbies. Everyone download it.
 

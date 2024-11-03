@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.4.0 (Coppertiel Fork)
+- Rework 'assign random player' logic
+  - Fix bug where Masked spawn from transformed players pick a random player
+  - Reduces dependence on MoreCompany
+- Add workaround for invisible masked enemies
+
 ## v3.3.0 (Coppertiel Fork)
 - Rework Zombie Apocalypse
 - Refactor config stuff

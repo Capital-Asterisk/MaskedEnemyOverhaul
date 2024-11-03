@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -19,6 +20,7 @@ namespace MaskedEnemyRework
         public int   Health                         = Cfg<int> ( "General", "Masked Health", 4, "Number of shovel hits required to kill a Masked.");
         public bool  UseVanillaSpawns               = Cfg<bool>( "General", "Use Vanilla Spawns", false, "Disables all spawning rules from this mod. Only uses the above settings from this config. Will not spawn on all moons. will ignore EVERYTHING in the config below this point.");
         public bool  DontTouchMimickingPlayer       = Cfg<bool>( "General", "Dont Touch MaskedPlayerEnemy.mimickingPlayer", false, "Experimental. Give control to other mods (like qwbarch-Mirage) to set which players are impersonated.");
+        public bool  UseStupidFix                   = Cfg<bool>( "General", "Fix Invisible Masked Enemy Bug", true, "Stupid workaround for some interaction with MoreCompany that make Masked invisible when opening/closing the ship door.");
         public bool  ShowMaskedNames                = Cfg<bool>( "General", "Show Masked Usernames", false, "[UNUSED FOR NOW] Will show username of player being mimicked.");
 
         public bool  UseSpawnRarity                 = Cfg<bool>( "Spawns", "Use Spawn Rarity", false, "Use custom spawn rate from config. If this is false, the masked spawns at the same rate as the Bracken. If true, will spawn at whatever rarity is given in Spawn Rarity config option");
@@ -87,6 +89,11 @@ namespace MaskedEnemyRework
             harmony.PatchAll(typeof(GetMaskedPrefabForLaterUse));
             harmony.PatchAll(typeof(MaskedVisualRework));
             harmony.PatchAll(typeof(MaskedSpawnSettings));
+
+            if (cfg.UseStupidFix)
+            {
+                harmony.PatchAll(typeof(UltraStupidFix));
+            }
 
             if (cfg.TriggerMines)
             {
